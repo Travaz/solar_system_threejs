@@ -1,0 +1,302 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+    <title>Sistema Solare (Three.js)</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+
+    <script src="js/three.min.js"></script>
+    <script src="js/OrbitControls.js"></script>
+
+    <script src="js/threex.planets.js"></script>
+    <script src="js/threex.atmospherematerial.js"></script>
+    <script src="js/dat.gui.min.js"></script>
+    <script src="js/threex.atmospheredatgui.js"></script>
+
+    <script src="js/stats.min.js"></script>
+
+</head>
+<body style="margin: 0; overflow:hidden; background-color:#000000" >
+    <script>
+
+         //Renderizzare sulla pagina HTML il progetto
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(innerWidth, innerHeight);
+            document.body.appendChild(renderer.domElement);
+            renderer.shadowMapEnabled = true;
+
+
+        //Variabili
+            //Controllo pagina HTML
+            var RenderEffects = new Array();
+            var camera, scene, renderer, controls;
+            var width = parseInt(document.body.clientWidth), height = parseInt(document.body.clientHeight);
+
+            //Luci dell'ambiente
+            var ambientlight, directionallight;
+
+            //Pianeti, materiale e anelli
+            var sun, mercury, venus, earth, earthcloud, moon, mars, jupiter, saturn, uranus, neptun;           
+            var sunMesh, mercuryMesh, venusMesh, earthMesh, earthcloudMesh, moonMesh, marsMesh, jupiterMesh, saturnMesh, uranusMesh, neptunMesh, plutoMesh;
+            var saturnRing, uranusRing;
+            var ellissi = 0;
+
+
+        //Programma
+
+            //Definire scena e camera
+                scene = new THREE.Scene();
+                camera = new THREE.PerspectiveCamera(45, width/height, 1, 10000000);
+                camera.position.z = 3000;
+
+                controls = new THREE.OrbitControls(camera, renderer.domElement);
+                controls.autoRotate = true;
+
+            //Definire le luci
+                ambientlight = new THREE.AmbientLight(0x222222);
+                scene.add(ambientlight);
+                directionallight = new THREE.DirectionalLight(0xffffff, 2)
+                directionallight.position.set(0, 20, 10);
+                scene.add(directionallight);
+                //Imposta le ombre della camera sulla Terra
+                    directionallight.castShadow = true;
+                    directionallight.shadowCameraNear = 0.01
+                    directionallight.shadowCameraFov = 45
+                    directionallight.shadowCameraFar = 15
+                //Imposta la posizione dell'ombra della camera
+                    directionallight.shadowCameraLeft = -1
+                    directionallight.shadowCameraRight = 1
+                    directionallight.shadowCameraTop = 1
+                    directionallight.shadowCameraBottom = -1
+                    directionallight.shadowBias = 0.001
+                    directionallight.shadowDarkness = 0.2
+                    directionallight.shadowMapWidth = 1024
+                    directionallight.shadowMapHeight = 1024
+
+            //The universe
+                function createUniverse() {
+                    //Creating universe with THREEx library
+                    var starSphere = THREEx.Planets.createStarfield();
+                    starSphere.scale.multiplyScalar(100);
+                    scene.add(starSphere);
+                }
+                
+                //Sun
+                function sun() {
+                    sunMesh = new THREEx.Planets.createSun()
+                    sunMesh.position.set(0, 0, -150)
+                    sunMesh.scale.multiplyScalar(50)
+                    sunMesh.receiveShadow = true
+                    sunMesh.castShadow = true
+                    RenderEffects.push(function (delta, now) {
+                        sunMesh.rotation.y += 1 / 2 * delta;
+                    })
+                    scene.add(sunMesh);
+                }
+                //Mercury
+                function mercury() {
+                    mercuryMesh = new THREEx.Planets.createMercury()
+                    mercuryMesh.position.z = sunMesh.position.z + 50;
+                    mercuryMesh.scale.multiplyScalar(1)
+                    mercuryMesh.receiveShadow = true
+                    mercuryMesh.castShadow = true
+                    RenderEffects.push(function (delta, now) {
+                        mercuryMesh.rotation.y += 1 / 10 * delta;
+                    })
+                    scene.add(mercuryMesh);
+                }
+                //Venus
+                function venus() {
+                    venusMesh = new THREEx.Planets.createVenus()
+                    venusMesh.position.z = sunMesh.position.z + 70;
+                    venusMesh.scale.multiplyScalar(1)
+                    venusMesh.receiveShadow = true
+                    venusMesh.castShadow = true
+                    RenderEffects.push(function (delta, now) {
+                        venusMesh.rotation.y += 1 / 10 * delta;
+                    })
+                    scene.add(venusMesh);
+                }              
+                //Earth and Moon
+                function EarthMoon() {
+
+                    //Container earth and moon
+                    var containerEarthMoon = new THREE.Object3D()
+                    containerEarthMoon.rotateZ(-23.4 * Math.PI / 180)
+                    containerEarthMoon.position.z = sunMesh.position.z + 90;
+                    scene.add(containerEarthMoon)
+
+                    moonMesh = new THREEx.Planets.createMoon();
+                    moonMesh.scale.multiplyScalar(1/5)
+                    moonMesh.position.x = 1;
+                    moonMesh.receiveShadow = true;
+                    moonMesh.castShadow = true;
+                    containerEarthMoon.add(moonMesh);
+
+                    var earthMesh = THREEx.Planets.createEarth()
+                    earthMesh.receiveShadow = true
+                    earthMesh.castShadow = true
+                    containerEarthMoon.add(earthMesh)
+                    RenderEffects.push(function (delta, now) {
+                        earthMesh.rotation.y += 1 / 32 * delta;
+                    })
+
+                    var geometry = new THREE.SphereGeometry(0.5, 32, 32)
+                    var material = THREEx.createAtmosphereMaterial()
+                    material.side = THREE.BackSide
+                    material.uniforms.glowColor.value.set(0x00b3ff)
+                    material.uniforms.coeficient.value = 0.5
+                    material.uniforms.power.value = 4.0
+                    var mesh = new THREE.Mesh(geometry, material);
+                    mesh.scale.multiplyScalar(1.15);
+                    containerEarthMoon.add(mesh);
+
+                    earthcloudMesh = new THREEx.Planets.createEarthCloud()
+                    earthcloudMesh.receiveShadow = true
+                    earthcloudMesh.castShadow = true
+                    containerEarthMoon.add(earthcloudMesh)
+                    RenderEffects.push(function (delta, now) {
+                        earthcloudMesh.rotation.y += 1 / 8 * delta;
+                        containerEarthMoon.position.x = Math.sin(ellissi * 0.1) * 15;
+                        containerEarthMoon.position.z = Math.cos(ellissi * 0.1) * 12;
+                        ellissi += Math.PI/180*2;
+                    })
+
+                }
+                //Mars
+                function mars() {
+                    marsMesh = new THREEx.Planets.createMars()
+                    marsMesh.position.z = sunMesh.position.z + 110;
+                    marsMesh.scale.multiplyScalar(1)
+                    marsMesh.receiveShadow = true
+                    marsMesh.castShadow = true
+                    RenderEffects.push(function (delta, now) {
+                        marsMesh.rotation.y += 1 / 8 * delta;
+                    })
+                    scene.add(marsMesh);
+                }
+                //Jupiter
+                function jupiter() {
+                    jupiterMesh = new THREEx.Planets.createJupiter()
+                    jupiterMesh.position.z = sunMesh.position.z + 130;
+                    jupiterMesh.scale.multiplyScalar(1)
+                    jupiterMesh.receiveShadow = true
+                    jupiterMesh.castShadow = true
+                    RenderEffects.push(function (delta, now) {
+                        jupiterMesh.rotation.y += 1 / 6 * delta
+                    })
+                    scene.add(jupiterMesh);
+                }
+                //Saturn
+                function saturn() {
+                    saturnMesh = new THREEx.Planets.createSaturn()
+                    saturnMesh.position.z = sunMesh.position.z + 150;
+                    saturnMesh.scale.multiplyScalar(1)
+                    saturnMesh.receiveShadow = true
+                    saturnMesh.castShadow = true
+                    RenderEffects.push(function (delta, now) {
+                        saturnMesh.rotation.y += 1 / 8 * delta;
+                    })
+                    scene.add(saturnMesh);
+                }
+                //Uranus
+                function uranus() {
+                    uranusMesh = new THREEx.Planets.createUranus()
+                    uranusMesh.position.z = sunMesh.position.z + 170;
+                    uranusMesh.scale.multiplyScalar(1)
+                    uranusMesh.receiveShadow = true
+                    uranusMesh.castShadow = true
+                    RenderEffects.push(function (delta, now) {
+                        uranusMesh.rotation.y += 1 / 8 * delta;
+                    })
+                    scene.add(uranusMesh);
+                }
+                //Neptun
+                function neptun() {
+                    neptunMesh = new THREEx.Planets.createNeptune()
+                    neptunMesh.position.z = sunMesh.position.z + 190;
+                    neptunMesh.scale.multiplyScalar(1)
+                    neptunMesh.receiveShadow = true
+                    neptunMesh.castShadow = true
+                    RenderEffects.push(function (delta, now) {
+                        neptunMesh.rotation.y += 1 / 8 * delta;
+                    })
+                    scene.add(neptunMesh);
+                }
+                //Pluto
+                function pluto() {
+                    plutoMesh = new THREEx.Planets.createPluto()
+                    plutoMesh.position.z = sunMesh.position.z + 210;
+                    plutoMesh.scale.multiplyScalar(1)
+                    plutoMesh.receiveShadow = true
+                    plutoMesh.castShadow = true
+                    RenderEffects.push(function (delta, now) {
+                        plutoMesh.rotation.y += 1 / 8 * delta;
+                    })
+                    scene.add(plutoMesh);
+                }
+
+
+            //Pianeti e universo
+                createUniverse();
+                sun();
+                mercury();
+                venus();
+                EarthMoon();
+                mars();
+                jupiter();
+                saturn();
+                uranus();
+                neptun();
+                pluto();
+                
+                
+            //Controllo della camera
+                //controlcamera();
+
+            //Render della scena
+                render();
+
+            //Animazione    
+                animate();
+                
+
+            
+        //Funzioni
+            //Funzione per il controllo della camera
+                function controlcamera() {
+                    var mouse = { x: 0, y: 0 }
+                    document.addEventListener('mousemove', function (event) {
+                        mouse.x = (event.clientX / window.innerWidth) - 0.2
+                        mouse.y = (event.clientY / window.innerHeight) - 0.2
+                    }, false)
+                    RenderEffects.push(function (delta, now) {
+                        camera.position.x += (mouse.x * 5 - camera.position.x) * (delta * 3)
+                        camera.position.y += (mouse.y * 5 - camera.position.y) * (delta * 3)
+                    })
+                }
+
+            //Funzione per l'animazione del sistema solare
+                function animate() {
+                    var lastTime = null;
+                    requestAnimationFrame(function animate(now) {
+                        requestAnimationFrame(animate);
+                        lastTime = lastTime || now - 1000 / 60
+                        var deltaTime = Math.min(200, now - lastTime)
+                        lastTime = now
+                        RenderEffects.forEach(function (RenderFct) {
+                            RenderFct(deltaTime / 1000, now / 1000)
+                        })
+                    })
+                    controls.update();
+                }
+
+            //Funzione che renderizza la scena
+                function render() {
+                    RenderEffects.push(function () {
+                        renderer.render(scene, camera);
+                    })
+                }
+    </script>
+</body>
+</html>

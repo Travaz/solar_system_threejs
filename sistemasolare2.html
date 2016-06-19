@@ -1,0 +1,391 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+    <title>Sistema Solare (Three.js)</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link rel="stylesheet" href="css/css.css" />
+    <link href='https://fonts.googleapis.com/css?family=Lobster' rel='stylesheet' type='text/css'>
+
+    <script src="js/three.min.js"></script>
+    <script src="js/jquery-1.5.1.min.js"></script>
+    <script src="js/OrbitControls.js"></script>
+
+    <script src="js/threex.planets.js"></script>
+    <script src="js/threex.atmospherematerial.js"></script>
+    <script src="js/dat.gui.min.js"></script>
+    <script src="js/threex.atmospheredatgui.js"></script>
+
+</head>
+<body>
+    <div class="planets">
+        <div class="title">
+            <a href="#">Solar System</a> 
+        </div>
+        <div class="listofplanets">
+            <div style="float: right">
+                <a onclick="showInfo(1)" class="btn">Mercury</a>
+                <a onclick="showInfo(1)" class="btn">Venus</a>
+                <a onclick="showInfo(1)" class="btn">Earth</a>
+                <a onclick="showInfo(1)" class="btn">Mars</a>
+                <a onclick="showInfo(1)" class="btn">Jupiter</a>
+                <a onclick="showInfo(1)" class="btn">Saturn</a>
+                <a onclick="showInfo(1)" class="btn">Uranus</a>
+                <a onclick="showInfo(1)" class="btn">Neptun</a>       
+            </div>            
+        </div>
+    </div>
+    
+    <div id="1" class="description">Mercury - </div>
+    <div id="2" class="description">Venus - </div>
+    <div id="3" class="description">Earth - </div>
+    <div id="4" class="description">Mars - </div>
+    <div id="5" class="description">Jupiter - </div>
+    <div id="6" class="description">Saturn - </div>
+    <div id="7" class="description">Uranus - </div>
+    <div id="8" class="description">Neptun - </div>
+    
+    <script>
+        //Variabili
+            //Controllo pagina HTML
+            var RenderEffects = new Array();
+            var camera, scene, renderer, controls, render;
+
+            //Luci dell'ambiente
+            var pointlight, ambientlight;
+
+            //Pianeti, materiale e anelli
+            var sun, mercury, venus, earth, earthcloud, moon, mars, jupiter, saturn, uranus, neptun;
+            var starsMesh, sunMesh, mercuryMesh, venusMesh, earthMesh, containerEarthMoon, earthcloudMesh, moonMesh, marsMesh, jupiterMesh, saturnMesh, uranusMesh, neptunMesh, plutoMesh;
+            var saturnRing, uranusRing;
+            var mercuryOrbit, venusOrbit, earthOrbit, earthcloudOrbit, moonOrbit, marsOrbit, jupiterOrbit, saturnOrbit, uranusOrbit, neptunOrbit;
+            var ellissi = 0;
+
+        //Per controllo delle informazioni
+            var info, infoMercury, infoVenus, infoEarth, infoMars, infoJupiter, infoSaturn, infoUranus, infoNeptun = false;
+
+        //Programma
+
+            camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 1, 10000000);
+            camera.position.z = 40000;
+            camera.position.x = -5000;
+            camera.rotation.z = -Math.PI/20; 
+            scene = new THREE.Scene();
+
+            pointlight = new THREE.PointLight(0xffffff, 1.4, 200000);
+            pointlight.position.set(0, 0, 0);
+            pointlight.castShadow = true;
+            pointlight.shadowMapWidth = 2048;
+            pointlight.shadowMapHeight = 2048;
+            scene.add(pointlight);
+            ambientlight = new THREE.AmbientLight(0x222222);
+            scene.add(ambientlight);
+
+
+            init();
+              
+            render = new THREE.WebGLRenderer();
+            render.setSize(innerWidth, innerHeight);
+            document.body.appendChild(render.domElement);
+
+            var y = 0;
+            document.addEventListener('mousemove', function (event) {
+                y = parseInt(event.offsetY);
+            });
+
+            animate();
+
+            
+
+        //Funzioni
+
+            function init() {
+                //Universe
+                createUniverse();
+                //Planets and rings
+                    sun();
+                    mercury();
+                    venus();
+                    EarthMoon();
+                    mars();
+                    jupiter();
+                    saturn();
+                    ringsaturn();
+                    uranus();
+                    ringuranus();
+                    neptun();
+            }
+
+            function animate() {
+
+                requestAnimationFrame(animate);
+
+                //Planets rotation
+                sunMesh.rotation.y += 0.001;
+                mercuryMesh.rotation.y += 0.001;
+                venusMesh.rotation.y += 0.001;
+                earthcloudMesh.rotation.y += 0.001;
+                marsMesh.rotation.y += 0.001;
+                jupiterMesh.rotation.y += 0.001;
+                saturnMesh.rotation.y += 0.001;
+                uranusMesh.rotation.y += 0.001;
+                neptunMesh.rotation.y += 0.001;
+                
+                render.render(scene, camera);
+
+                //Planets orbits and checking events
+                if (!info) {
+                    mercuryMesh.position.x = Math.sin(ellissi * 0.03) * 3000;
+                    mercuryMesh.position.z = Math.cos(ellissi * 0.03) * 3000;
+
+                    venusMesh.position.x = Math.sin(ellissi * 0.02) * 4500;
+                    venusMesh.position.z = Math.cos(ellissi * 0.02) * 4500;
+
+                    containerEarthMoon.position.x = Math.sin(ellissi * 0.01) * 6000;
+                    containerEarthMoon.position.z = Math.cos(ellissi * 0.01) * 6000;
+
+                    marsMesh.position.x = Math.sin(ellissi * 0.009) * 7500;
+                    marsMesh.position.z = Math.cos(ellissi * 0.009) * 7500;
+
+                    jupiterMesh.position.x = Math.sin(ellissi * 0.008) * 10000;
+                    jupiterMesh.position.z = Math.cos(ellissi * 0.008) * 10000;
+
+                    saturnMesh.position.x = Math.sin(ellissi * 0.007) * 14000;
+                    saturnMesh.position.z = Math.cos(ellissi * 0.007) * 14000;
+
+                    uranusMesh.position.x = Math.sin(ellissi * 0.006) * 17000;
+                    uranusMesh.position.z = Math.cos(ellissi * 0.006) * 17000;
+
+                    neptunMesh.position.x = Math.sin(ellissi * 0.005) * 19000;
+                    neptunMesh.position.z = Math.cos(ellissi * 0.005) * 19000;
+
+                    camera.position.y = y * 9;
+                    camera.lookAt(scene.position);
+
+                    ellissi += Math.PI / 180 * 2;
+                }
+                else {
+                    if (infoMercury) {
+                        if (camera.position.z > mercuryMesh.position.z -100) {
+                            camera.position.z -= 100;
+                            camera.lookAt(mercuryMesh.position);
+                        }
+                        if (camera.position.x < mercuryMesh.position.x) {
+                            camera.position.x += 30;
+                        }
+                    }
+                }               
+              
+            }
+
+
+            //Universe
+                function createUniverse(){
+                    var starSphere = THREEx.Planets.createStarfield();
+                    scene.add(starSphere);
+                }         
+            //Planets and rings 
+                //Sun
+                function sun() {
+                    sunMesh = new THREEx.Planets.createSun();
+                    sunMesh.scale.multiplyScalar(2000);
+                    sunMesh.receiveShadow = true
+                    sunMesh.castShadow = true
+
+                    scene.add(sunMesh);
+                }
+                //Mercury
+                function mercury() {
+                    mercuryMesh = new THREEx.Planets.createMercury()
+                    mercuryMesh.scale.multiplyScalar(40)
+                    mercuryMesh.receiveShadow = true
+                    mercuryMesh.castShadow = true
+                    scene.add(mercuryMesh);
+                }
+                //Venus
+                function venus() {
+                    venusMesh = new THREEx.Planets.createVenus()
+                    venusMesh.position.z = sunMesh.position.z + 70;
+                    venusMesh.scale.multiplyScalar(100)
+                    venusMesh.receiveShadow = true
+                    venusMesh.castShadow = true
+
+                    scene.add(venusMesh);
+                }
+                //Earth and Moon
+                function EarthMoon() {
+
+                    //Container earth and moon
+                    containerEarthMoon = new THREE.Object3D()
+                    containerEarthMoon.rotateZ(-23.4 * Math.PI / 180)
+                    containerEarthMoon.scale.multiplyScalar(100);
+                    containerEarthMoon.position.x = 1500;
+                    scene.add(containerEarthMoon)
+
+                    moonMesh = new THREEx.Planets.createMoon();
+                    moonMesh.scale.multiplyScalar(1/6);
+                    moonMesh.position.x = 1;
+                    moonMesh.receiveShadow = true;
+                    moonMesh.castShadow = true;
+                    containerEarthMoon.add(moonMesh);
+
+                    var earthMesh = THREEx.Planets.createEarth()
+                    earthMesh.receiveShadow = true
+                    earthMesh.castShadow = true
+                    containerEarthMoon.add(earthMesh)
+
+                    var geometry = new THREE.SphereGeometry(0.5, 32, 32)
+                    var material = THREEx.createAtmosphereMaterial()
+                    material.side = THREE.BackSide
+                    material.uniforms.glowColor.value.set(0x00b3ff)
+                    material.uniforms.coeficient.value = 0.5
+                    material.uniforms.power.value = 4.0
+                    var mesh = new THREE.Mesh(geometry, material);
+                    mesh.scale.multiplyScalar(1.15);
+                    containerEarthMoon.add(mesh);
+
+                    earthcloudMesh = new THREEx.Planets.createEarthCloud()
+                    earthcloudMesh.receiveShadow = true
+                    earthcloudMesh.castShadow = true
+                    containerEarthMoon.add(earthcloudMesh)
+
+                }
+                //Mars
+                function mars() {
+                    marsMesh = new THREEx.Planets.createMars()
+                    marsMesh.scale.multiplyScalar(60)
+                    marsMesh.receiveShadow = true
+                    marsMesh.castShadow = true
+                    scene.add(marsMesh);
+                }
+                //Jupiter
+                function jupiter() {
+                    jupiterMesh = new THREEx.Planets.createJupiter()
+                    jupiterMesh.scale.multiplyScalar(800)
+                    jupiterMesh.receiveShadow = true
+                    jupiterMesh.castShadow = true
+                    scene.add(jupiterMesh);
+                }
+                //Saturn
+                function saturn() {
+                    saturnMesh = new THREEx.Planets.createSaturn()
+                    saturnMesh.scale.multiplyScalar(670)
+                    saturnMesh.receiveShadow = true
+                    saturnMesh.castShadow = true
+                    scene.add(saturnMesh);
+                }
+                function ringsaturn() {
+                    saturnRing = new THREEx.Planets.createSaturnRing();
+                    saturnRing.scale.multiplyScalar(1000);
+                    saturnRing.position.x = saturnMesh.position.x;
+                    saturnRing.position.z = saturnMesh.position.z;
+
+                }
+                //Uranus
+                function uranus() {
+                    uranusMesh = new THREEx.Planets.createUranus()
+                    uranusMesh.scale.multiplyScalar(300)
+                    uranusMesh.receiveShadow = true
+                    uranusMesh.castShadow = true
+                    scene.add(uranusMesh);
+                }
+                function ringuranus() {
+                    uranusRing = new THREEx.Planets.createUranusRing();
+                    uranusRing.scale.multiplyScalar(1000);
+                    uranusRing.position.x = saturnMesh.position.x;
+                    uranusRing.position.z = saturnMesh.position.z;
+                }
+                //Neptun
+                function neptun() {
+                    neptunMesh = new THREEx.Planets.createNeptune()
+                    neptunMesh.scale.multiplyScalar(280)
+                    neptunMesh.receiveShadow = true
+                    neptunMesh.castShadow = true
+                    scene.add(neptunMesh);
+                }
+
+            //Orbits
+                var Orbit = function (radius) {
+                    this.radius = radius;
+
+                    this.draw = function (scene) {
+                        var og = new THREE.Geometry();
+                        var om = new THREE.ParticleBasicMaterial({ color: 0xbfbfbf, size: 1, opacity: 0.2, sizeAttenuation: false });
+                        for (var i = 0; i < 50000; i++) {
+                            var v = new THREE.Vector3();
+                            v.x = Math.sin(Math.PI / 180 * i) * this.radius;
+                            v.z = Math.cos(Math.PI / 180 * i) * this.radius;
+                            og.vertices.push(v);
+                        }
+                        var orbit = new THREE.ParticleSystem(og, om);
+                        scene.add(orbit);
+                    };
+                };
+                //MercuryOrbit
+                mercuryOrbit = new Orbit(3000);
+                mercuryOrbit.draw(scene);
+                //MercuryOrbit
+                venusOrbit = new Orbit(4500);
+                venusOrbit.draw(scene);
+                //MercuryOrbit
+                earthOrbit = new Orbit(6000);
+                earthOrbit.draw(scene);
+                //MercuryOrbit
+                marsOrbit = new Orbit(7500);
+                marsOrbit.draw(scene);
+                //MercuryOrbit
+                jupiterOrbit = new Orbit(10000);
+                jupiterOrbit.draw(scene);
+                //MercuryOrbit
+                saturnOrbit = new Orbit(14000);
+                saturnOrbit.draw(scene);
+                //MercuryOrbit
+                uranusOrbit = new Orbit(17000);
+                uranusOrbit.draw(scene);
+                //MercuryOrbit
+                neptunOrbit = new Orbit(19000);
+                neptunOrbit.draw(scene);
+
+            //Information about planets
+                function showInfo(num) {
+                    switch (num) {
+                        case 1:
+                            info = true;
+                            infoMercury = true;
+                            break;
+                        case 2:
+                            info = true;
+                            infoVenus = true;
+                            break;
+                        case 3:
+                            info = true;
+                            infoEarth = true;
+                            break;
+                        case 4:
+                            info = true;
+                            infoMars = true;
+                            break;
+                        case 5:
+                            info = true;
+                            infoJupiter = true;
+                            break;
+                        case 6:
+                            info = true;
+                            infoSaturn = true;
+                            break;
+                        case 7:
+                            info = true;
+                            infoUranus = true;
+                            break;
+                        case 8:
+                            info = true;
+                            infoNeptun = true;
+                            break;
+                        default:
+                            break;
+                    }
+                }
+    </script>
+
+</body>
+</html>

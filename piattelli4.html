@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<title>Hello World (Three.js)</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+  
+</head>
+<body>
+
+	<script src="build/three.min.js"></script>
+	<script src='build/THREEx.KeyboardState.js'></script>
+ <script src="examples/js/controls/OrbitControls.js"></script>
+
+
+<script>
+
+// standard global variables
+var container, scene, camera, renderer, controls,keyboard;
+
+var fucile,lanciatore,astafucile;
+var line4 = THREE.Line;
+var cube;
+var camerahelper;
+var tempo = 0,lasttempo=0;
+var ferma=0;
+init();
+
+animate();
+
+
+			
+function init() 
+{
+
+      container = document.createElement('div');
+	  document.body.appendChild(container);
+
+
+	scene = new THREE.Scene();
+
+	
+	// camera attributes
+	var VIEW_ANGLE = 60, ASPECT = window.innerWidth / window.innerHeight, NEAR = 0.1, FAR = 10000;
+	// set up camera
+	camera = new THREE.PerspectiveCamera(VIEW_ANGLE, ASPECT, NEAR, FAR);
+	
+	// add the camera to the scene
+	scene.add(camera);
+	// the camera defaults to position (0,0,0)
+	// 	so pull it back (z = 400) and up (y = 100) and set the angle towards the scene origin
+	camera.position.set(0,0,350);
+	camera.lookAt(scene.position);	
+    
+
+   renderer = new THREE.WebGLRenderer();
+		        renderer.setSize(window.innerWidth, window.innerHeight);
+		        renderer.sortObjects = false;
+
+	
+	  container = document.createElement( 'div' );
+    document.body.appendChild( container );
+	
+
+	container.appendChild( renderer.domElement );
+	
+	
+	controls = new THREE.OrbitControls( camera, renderer.domElement );
+	
+	
+	///////////
+	// LIGHT //
+	///////////
+	
+    // create a light
+
+	
+
+	var light = new THREE.PointLight(0x0000ff);
+	light.position.set(0,550,0);
+  // scene.add(light);
+
+	var ambientLight = new THREE.AmbientLight(0x303030);
+	scene.add(ambientLight);
+
+
+
+
+
+	var light = new THREE.PointLight(0xffffff);
+	light.position.set(0, 250, 100);
+	scene.add(light);
+
+	var plh = new THREE.PointLightHelper(light, 4);
+	scene.add(plh);
+	
+
+
+	var axes = new THREE.AxisHelper(100);
+	axes.tipo = 10;
+	//scene.add(axes);
+
+
+    // SKYBOX
+	var imagePrefix = "textures/skybox/";
+	var directions = ["posx", "negx", "posy", "negy", "posz", "negz"];
+	var imageSuffix = ".jpg";
+	var skyGeometry = new THREE.CubeGeometry(5000, 5000, 5000);
+
+	var materialArray = [];
+	for (var i = 0; i < 6; i++)
+	    materialArray.push(new THREE.MeshBasicMaterial({
+	        map: THREE.ImageUtils.loadTexture(imagePrefix + directions[i] + imageSuffix),
+	        side: THREE.BackSide
+	    }));
+	var skyMaterial = new THREE.MeshFaceMaterial(materialArray);
+	var skyBox = new THREE.Mesh(skyGeometry, skyMaterial);
+//	scene.add(skyBox);
+
+
+	creafucile();
+	
+
+	  keyboard = new THREEx.KeyboardState();
+	
+
+	
+}
+
+   function onWindowResize() {
+
+		        camera.left = window.innerWidth / -2;
+		        camera.right = window.innerWidth / 2;
+		        camera.top = window.innerHeight / 2;
+		        camera.bottom = window.innerHeight / -2;
+
+		        camera.updateProjectionMatrix();
+		        camerahelper.update();
+
+		        renderer.setSize(window.innerWidth, window.innerHeight);
+
+		    }
+
+function animate() 
+   {
+    tempo++;
+
+    for(var i=0;i<scene.children.length;i++)
+    {
+      
+        var oggetto = scene.children[i];
+        if(oggetto.tipo==1)   // � un piattello
+        {
+		if(ferma==0){
+            oggetto.vy -= .03;
+            oggetto.position.y += oggetto.vy
+            oggetto.position.x += oggetto.vx;// oggetto.velocita[0];
+           // oggetto.position.y += oggetto.vy- 0.03 * (tempo - oggetto.tempo);
+            oggetto.position.z += oggetto.vz;//oggetto.velocita[2];
+            oggetto.rotation.x+=( oggetto.rx);
+			}
+            if (oggetto.position.y <= 0) scene.remove(oggetto);
+            if (oggetto.colpito == 1) {
+             //   creapiattellorotto(oggetto);
+                scene.remove(oggetto);
+            }
+        }
+
+        if (oggetto.tipo ==2)   // � una pallottola
+        {
+            oggetto.position.x +=3 * oggetto.direzione.x;
+            oggetto.position.y += 3 * oggetto.direzione.y;
+            oggetto.position.z += 3 * oggetto.direzione.z;
+            if (oggetto.position.z <= -2000) scene.remove(oggetto);
+            if (oggetto.colpito == 1) scene.remove(oggetto);
+        }
+        if (oggetto.tipo ==3) 
+        {
+           
+            if (oggetto.colpito == 1) {
+               
+               // creapiattellorotto(oggetto);
+                scene.remove(oggetto);
+            }
+        }
+
+     
+
+    }
+   	if ( keyboard.pressed("N") )creapiattello();
+   	if (keyboard.pressed("M")) spara();
+   	if (keyboard.pressed("P")) spara(1);
+	
+	 	if (keyboard.pressed("F")) {ferma=!ferma}
+   	if (keyboard.pressed("A"))
+   	    fucile.rotation.x+=(.4 * Math.PI / 180);
+
+   	if (keyboard.pressed("D"))
+   	    fucile.rotation.y-=(.4 * Math.PI / 180);
+   	if (keyboard.pressed("W"))
+   	    fucile.rotation.x+=(1 * Math.PI / 180);
+
+   	if (keyboard.pressed("S"))
+   	    fucile.rotation.y-=(1* Math.PI / 180);
+
+    
+   	var dx = 0.005;
+   	var dy = 0.005;
+
+   
+   requestAnimationFrame( animate );
+	render();		
+	
+}
+
+
+
+function render() 
+{	
+	renderer.render( scene, camera );
+}
+
+
+function creapiattello() 
+{	
+	var cylinderGeometry = new THREE.CylinderGeometry(9, 12, 2, 32, false);
+
+	var cm = new THREE.MeshLambertMaterial({ color:0xff0000 })
+	
+var	piattello = new THREE.Mesh(cylinderGeometry, cm);
+
+	piattello.position.set(-200,20,0);
+	piattello.vx = 2 + 2 * Math.random();
+	piattello.vy = 2 + 2 * Math.random();
+	piattello.vz = 2 * Math.random() - 1;
+	piattello.rx = .02 ;
+	piattello.tempo = tempo;
+	piattello.tipo = 1;
+	lastpiattello=piattello
+	scene.add(piattello);
+}
+
+
+
+function creafucile() {
+    var cylinderGeometry = new THREE.CylinderGeometry(0.2,.2,8, 32, false);
+  var orientation = new THREE.Matrix4();
+         orientation.makeRotationX(90 * 2 * Math.PI / 360);//rotate on X 90 degrees
+          cylinderGeometry.applyMatrix(orientation);
+    var cm = new THREE.MeshLambertMaterial({ color: 0x00f000 })
+        fucile = new THREE.Mesh(cylinderGeometry, cm);
+         fucile.position.set(0, 10, 300);
+     
+         scene.add(fucile);
+
+    //piedistallo
+         var cubeGeometry = new THREE.CubeGeometry(.2, 20, .2, 32, false);
+ 
+         cm = new THREE.MeshLambertMaterial({ color: 0x00f000 })
+         astafucile = new THREE.Mesh(cubeGeometry, cm);
+         astafucile.position.set(0, 0, 300);
+
+         scene.add(astafucile);
+
+
+    //lanciatore
+         var cubeGeometry2 = new THREE.CubeGeometry(1, 20, 1, 32, false);
+         orientation = new THREE.Matrix4();
+
+         cubeGeometry2.applyMatrix(orientation);
+         cm = new THREE.MeshLambertMaterial({ color: 0x0000f0 })
+         lanciatore = new THREE.Mesh(cubeGeometry2, cm);
+         lanciatore.position.set(-200,10, 00);
+
+         scene.add(lanciatore);
+
+
+
+}
+
+function spara(mirato) {
+
+  
+    var piattello_caso = Math.floor(Math.random()*scene.children.length);
+  
+  if(mirato) fucile.lookAt(scene.children[piattello_caso].position)
+    lasttempo = tempo;
+    var pallGeometry = new THREE.OctahedronGeometry(1);
+
+    var pallMaterial = new THREE.MeshLambertMaterial({ color: 0xf04040, wireframe: false });
+    var pallottola = new THREE.Mesh(pallGeometry, pallMaterial);
+    pallottola.position = fucile.position.clone();
+
+ //   pallottola.direzione = new THREE.Vector3(fucile.rotation.y, -fucile.rotation.x, Math.sqrt( 10 - fucile.rotation.y * fucile.rotation.y-fucile.rotation.x * fucile.rotation.x)).normalize();
+ 
+   
+ //   var vi = new THREE.Vector3(0, 0, -1);
+  var vi = new THREE.Vector3(0, 0, 1);
+  
+    var matrix = new THREE.Matrix4();
+    var matrix2 = new THREE.Matrix4();
+ 
+    matrix.makeRotationX(fucile.rotation.x);
+    matrix2.makeRotationY(fucile.rotation.y);
+  
+    matrix.multiplyMatrices(matrix, matrix2);
+
+    vi.applyMatrix4(matrix);
+    pallottola.direzione = vi;
+ 
+    pallottola.tipo = 2;
+
+    
+  // scene.add(pallottola);
+
+   if (line4 != null)  scene.remove(line4);
+   var material3 = new THREE.LineBasicMaterial({
+       color: 0x0000ff
+   });
+   var geometry4 = new THREE.Geometry();
+   var partenza = new THREE.Vector3(0, fucile.position.y, 300)
+   geometry4.vertices.push(partenza);
+   geometry4.vertices.push(partenza.clone().add(pallottola.direzione.clone().multiplyScalar(2000)));
+ 
+  line4 = new THREE.Line(geometry4, material3);
+  
+ //scene.add(line4);
+
+
+ // var rayp = new THREE.Raycaster(pallottola.position,pallottola.direzione);
+   var rayp = new THREE.Raycaster(partenza.clone(),pallottola.direzione.clone());
+   
+
+    // create an array containing all objects in the scene with which the ray intersects
+    var intersects2 = rayp.intersectObjects(scene.children);
+  if(intersects2.length>0) console.log("colpito "+  intersects2[0].object.tipo)
+    
+  for (var i = 0; i < intersects2.length; i++) {
+
+      intersects2[i].object.colpito = 1;
+     console.log("colpitol "+  JSON.stringify(intersects2[i].object.tipo))
+  }
+
+
+
+
+}
+
+
+
+</script>
+
+</body>
+</html>

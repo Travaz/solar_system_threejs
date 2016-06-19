@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<title>Fisica</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+  
+</head>
+<body onkeydown="creapalle(100)">
+
+	<script src="build/three.min.js"></script>
+ <script src="examples/js/controls/OrbitControls.js"></script>
+
+
+<script>
+   
+
+// standard global variables
+var container, scene, camera, renderer, controls;
+
+var segm=8
+var R = 10
+var alfa = 2 * Math.PI / 8
+
+
+var tempo = 0,lasttempo=0;
+
+init();
+
+animate();
+
+
+			
+function init() 
+{
+
+      container = document.createElement('div');
+	  document.body.appendChild(container);
+
+
+	scene = new THREE.Scene();
+
+	
+	// camera attributes
+	var VIEW_ANGLE = 60, ASPECT = window.innerWidth / window.innerHeight, NEAR = 0.1, FAR = 10000;
+	// set up camera
+	camera = new THREE.PerspectiveCamera(VIEW_ANGLE, ASPECT, NEAR, FAR);
+    //	 camera = new THREE.OrthographicCamera(window.innerWidth / -2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / -2, 1, 1000);
+	// add the camera to the scene
+	scene.add(camera);
+	// the camera defaults to position (0,0,0)
+	// 	so pull it back (z = 400) and up (y = 100) and set the angle towards the scene origin
+	camera.position.set(0,30,300);
+	camera.lookAt(scene.position);	
+    
+
+   renderer = new THREE.WebGLRenderer();
+		        renderer.setSize(window.innerWidth, window.innerHeight);
+		        renderer.sortObjects = false;
+
+	
+	  container = document.createElement( 'div' );
+    document.body.appendChild( container );
+	
+
+	container.appendChild( renderer.domElement );
+	
+	
+	controls = new THREE.OrbitControls( camera, renderer.domElement );
+
+
+
+  
+	///////////
+	// LIGHT //
+	///////////
+    var txt1 = THREE.ImageUtils.loadTexture('textures/tc-earth_daymap.jpg');
+		     
+
+	var tileGeometry = new THREE.CubeGeometry(6000, .1,6000, 8, 8, 8);
+    txt1.wrapS = txt1.wrapT = THREE.RepeatWrapping;
+    txt1.repeat.set( 12, 12 );
+    var tilematerial = new THREE.MeshPhongMaterial({ map: txt1 });
+
+	tilem = new THREE.Mesh(tileGeometry, tilematerial);
+    scene.add(tilem)
+
+
+	var light = new THREE.PointLight(0xffffff);
+	light.position.set(0, 250, 100);
+	scene.add(light);
+
+
+	var axes = new THREE.AxisHelper(100);
+	axes.tipo = 10;
+	scene.add(axes);
+
+
+
+}
+
+   function onWindowResize() {
+
+		        camera.left = window.innerWidth / -2;
+		        camera.right = window.innerWidth / 2;
+		        camera.top = window.innerHeight / 2;
+		        camera.bottom = window.innerHeight / -2;
+
+		        camera.updateProjectionMatrix();
+		        camerahelper.update();
+
+		        renderer.setSize(window.innerWidth, window.innerHeight);
+
+		    }
+
+function animate() 
+   {
+
+      scene.children.forEach(function(p) {
+
+		if (p.tipo == 1) {
+           palla = p;
+            palla.velocita.y = palla.velocita.y - .03;
+
+            if (palla.position.y < 3) 
+            {
+                palla.velocita.y = -.8 * palla.velocita.y;
+                palla.position.y = 3.2;
+                palla.rimbalzi++;
+            }
+
+            palla.position.x += palla.velocita.x;
+            palla.position.z += palla.velocita.z;
+            palla.position.y += palla.velocita.y;
+			
+			if(palla.rimbalzi>10) scene.remove(palla)
+        }
+    
+
+    })
+
+   requestAnimationFrame( animate );
+	render();		
+	
+}
+
+
+
+function render() 
+{	
+	renderer.render( scene, camera );
+}
+
+
+function creapalla() {
+
+   
+
+    var palla
+    var palla_geom = new THREE.SphereGeometry(6+Math.floor(6*Math.random()), 16, 16);
+    var palla_mat = new THREE.MeshPhongMaterial({ color: Math.random()*0xffffff });
+    palla = new THREE.Mesh(palla_geom, palla_mat);
+    palla.position.set(Math.random() * 1000, Math.random() * 1000, Math.random() * 2000);
+
+    var rx = Math.floor(1 + Math.random() * 200)
+    var ry = Math.floor(1 + Math.random() * 200)
+    var rz = Math.floor(1 + Math.random() * 200)
+
+    palla.velocita = new THREE.Vector3(1.5+rx/100-rx/50, 3+ry/100-ry/50, -1+rz/100-rz/50);
+    palla.tipo = 1;
+	palla.rimbalzi=0;
+   
+    scene.add(palla);
+
+    return palla;
+}
+     
+function creapalle(n) { for (i = 0; i < n; i++) creapalla();}
+</script>
+
+</body>
+</html>

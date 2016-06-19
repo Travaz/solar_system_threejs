@@ -1,0 +1,107 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+    <title>Hello World (Three.js)</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+
+</head>
+<body style="background-color:black" >
+    <div id="conte" style="color:white">
+
+    </div>
+    <script src="js/three.min.js"></script>
+    <script src="examples/js/controls/OrbitControls.js"></script>
+
+    <script>
+
+        var onRenderFcts = [];
+        var cubeMesh, pyramidMesh, sferamesh;
+        var camera, scene, renderer, geometry, material, mesh;
+        var cube1, cubes, projectile, aim, keyboard,timerReload,timerShot,gui,parameters,skyTemp;
+
+        init();
+        animate();
+
+        function init() {
+
+            scene = new THREE.Scene();
+
+            camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.01, 100);
+            camera.position.z = 1;
+
+            scene.add(camera);
+
+            //Cubo
+            var cubegeometry = new THREE.CubeGeometry(65, 65, 65);
+            var materialCube = new THREE.MeshLambertMaterial({ color: "lightblue" });
+            cubeMesh = new THREE.Mesh(cubegeometry, materialCube)
+            cubeMesh.position.set(0, 0, 0);
+            scene.add(cubeMesh);
+
+            //Sfera con texture
+            var pallageometry = new THREE.SphereGeometry(40, 32, 32);
+            texture = THREE.ImageUtils.loadTexture('textures/tc-earth_daymap.jpg');
+            var materialsfera = new THREE.MeshPhongMaterial({ map: texture });
+            sferamesh = new THREE.Mesh(pallageometry, materialsfera);
+            sferamesh.position.set(90, 0, 0);
+            scene.add(sferamesh);
+
+
+            //Piramide
+            var pyramidgeometry = new THREE.CylinderGeometry(0, 60, 22, 4, false);
+            var pyramidMaterials = [
+                new THREE.MeshBasicMaterial({ color: 0xFF0000 }),
+                new THREE.MeshBasicMaterial({ color: 0x00FF00 }),
+                new THREE.MeshBasicMaterial({ color: 0x0000FF }),
+                new THREE.MeshBasicMaterial({ color: 0xFFFF00 }),
+                new THREE.MeshBasicMaterial({ color: 0xFF00FF }),
+                new THREE.MeshBasicMaterial({ color: 0xFFFFFF }),
+            ];
+            var pyramidMaterial = new THREE.MeshFaceMaterial(pyramidMaterials);
+            pyramidMesh = new THREE.Mesh(pyramidgeometry, pyramidMaterial);
+            pyramidMesh.position.set(-120, 0, 0);
+            scene.add(pyramidMesh);
+
+            var axes = new THREE.AxisHelper(200);
+            scene.add(axes);
+
+            var AmbientLight = new THREE.AmbientLight(0x00050);
+            scene.add(AmbientLight);
+
+            var light = new THREE.PointLight(0xffffff);
+            light.position.set(0, 50, 0);
+            scene.add(light);
+
+            var pointLight = new THREE.PointLight(0xFFFFFF, 1, 00);
+            pointLight.position.set(10, 300, 10);
+            scene.add(pointLight);
+
+            var sphereSize = 1;
+            var pointLightHelper = new THREE.PointLightHelper(pointLight, sphereSize);
+            scene.add(pointLightHelper);
+
+            renderer = new THREE.WebGLRenderer();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+            controls = new THREE.OrbitControls(camera, render.domElement);
+
+        }
+            function animate() {
+                requestAnimationFrame(animate);
+                cubeMesh.rotateX(.01);
+                sferamesh.rotateY(.003);
+                pyramidMesh.rotateZ(.01);
+                render();
+            }
+
+            function render() {
+
+                renderer.render(scene, camera);
+            }
+        
+    </script>
+	<div id="cont1" style="background-color:white "></div>
+</body>
+</html>
+

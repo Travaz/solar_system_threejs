@@ -1,0 +1,59 @@
+﻿body {
+    background-color: #000;
+}
+
+a{
+    text-decoration: none;
+    color: inherit;
+}
+
+div.planets{
+    position: relative;
+    background-color: #000;
+    width: 63%;
+    color: white;
+    margin: 0 auto;
+}
+
+div.listofplanets{
+    float: right;
+}
+div.title{
+    float: left;
+    font-size: 25px;
+    font-family: 'Lobster', sans-serif;
+}
+
+a.btn{
+    color: rgb(103,109,121);
+    display: inline-block;
+    font-family: 'Lobster', sans-serif;
+    font-size: 16.3333px;
+    font-weight: 400;   
+    margin: 0;
+    padding: 0 12px;
+    width: auto;
+    height: 30px;
+    line-height: 30px;
+    box-sizing: border-box;
+    border: 1px solid rgba(255,255,255, 0.5);
+    border-radius: 4px;
+    transition-delay: 0s, 0s, 0s;
+    transition-duration: 0.2s, 0.2s, 0.2s;
+    transition-property: color, border-color, background-color;
+    transition-timing-function: ease-in-out, ease-in-out, ease-in-out;
+    vertical-align: baseline;
+
+}
+a.btn:hover{
+    cursor: pointer;  
+    background-color: rgba(255,255,255, 0.9); 
+}
+
+
+.description{
+    display: none;
+    z-index: 100;
+    color: white;
+    font-size: 12px;
+}
