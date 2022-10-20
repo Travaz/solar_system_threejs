@@ -1,0 +1,7 @@
+{
+  "name": "solar_system_threejs",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com/Travaz/solar_system_threejs",
+  "license": "MIT"
+}
