@@ -1,0 +1,6 @@
+version: "3.9"
+services:
+  solar-system:
+    build: .
+    ports:
+      - "80:80"
